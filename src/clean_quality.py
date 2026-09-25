@@ -299,3 +299,140 @@ def save_processed(df: pd.DataFrame, cfg: dict[str, Any], filename: str) -> Path
     df.to_parquet(out, index=False, engine=cfg["settings"]["parquet_engine"])
     print(f"Saved processed → {out}  ({len(df):,} rows)")
     return out
+
+
+# ---------------------------------------------------------------------------
+# Presidential-speech text analysis (project-specific)
+# ---------------------------------------------------------------------------
+# These derive the per-speech language metrics the project's lead question needs:
+# word count, and self (I/me/my/mine) vs collective (we/us/our/ours) pronoun use.
+# Tokenization is deliberately simple and transparent (lowercase word tokens via
+# a Unicode-word regex) so the counts are explainable in a codebook — no hidden
+# NLP model. Contractions matter here ("I'm", "we'll", "let's"), so they are
+# handled explicitly rather than split away.
+
+import re as _re
+
+# Pronoun sets. Keys are the surface tokens we count (apostrophes normalized to
+# a straight quote first). Contractions are mapped to the pronoun they contain.
+_SELF_PRONOUNS = {"i", "me", "my", "mine", "myself"}
+_COLLECTIVE_PRONOUNS = {"we", "us", "our", "ours", "ourselves"}
+
+# Contraction → leading pronoun (so "I'm"/"we'll"/"we're" count as I / we).
+_SELF_CONTRACTIONS = {"i'm", "i've", "i'll", "i'd"}
+_COLLECTIVE_CONTRACTIONS = {"we're", "we've", "we'll", "we'd", "let's"}
+# note: "let's" = "let us" → collective, a real first-person-plural call to action.
+
+# Word tokenizer: keep intra-word apostrophes (straight quote) so contractions
+# survive; everything else is a boundary.
+_WORD_RE = _re.compile(r"[a-z]+(?:'[a-z]+)?")
+
+
+def tokenize(text: str) -> list[str]:
+    """Lowercase word-tokenize, preserving contractions (apostrophes normalized).
+
+    Returns a list of lowercase tokens. Curly apostrophes (\u2019) are normalized to
+    straight quotes so contractions like "I\u2019m" and "I'm" tokenize identically.
+    """
+    if not text:
+        return []
+    t = text.lower().replace("\u2019", "'")
+    return _WORD_RE.findall(t)
+
+
+def count_pronouns(text: str) -> dict[str, int]:
+    """Count word tokens, self-pronouns, and collective-pronouns in one text.
+
+    Contractions are attributed to the pronoun they contain (I'm→I, we'll→we,
+    let's→we). Returns dict: word_count, self_count, collective_count.
+    """
+    tokens = tokenize(text)
+    self_n = 0
+    coll_n = 0
+    for tok in tokens:
+        if tok in _SELF_PRONOUNS or tok in _SELF_CONTRACTIONS:
+            self_n += 1
+        elif tok in _COLLECTIVE_PRONOUNS or tok in _COLLECTIVE_CONTRACTIONS:
+            coll_n += 1
+    return {"word_count": len(tokens), "self_count": self_n, "collective_count": coll_n}
+
+
+# Speech-type classification -------------------------------------------------
+# The Miller Center title format is "Month DD, YYYY: <Description>". The text
+# after the colon is a human label we bucket into institutional speech types.
+# This is what lets us compare LIKE-with-LIKE (SOTU vs SOTU) instead of pooling
+# apples and oranges across the whole curated corpus.
+
+def _title_label(title: str) -> str:
+    """Return the descriptive part of a Miller Center title (after the colon)."""
+    return title.split(":", 1)[1].strip() if ":" in title else (title or "").strip()
+
+
+def classify_speech_type(title: str) -> str:
+    """Bucket a speech into an institutional type from its title.
+
+    Buckets: 'Inaugural Address', 'State of the Union', 'Annual Message',
+    'Farewell Address', 'Press/News Conference', 'Address to Congress',
+    'Nomination Acceptance', 'Debate', 'Fireside Chat', 'Oath of Office',
+    'Other'. 'State of the Union' and 'Annual Message' are the SAME
+    constitutional address under different era-labels — unify them with
+    `sotu_series()` when building the broad-coverage SOTU comparison.
+    """
+    l = _title_label(title).lower()
+    if "inaugural address" in l:
+        return "Inaugural Address"
+    if "state of the union" in l:
+        return "State of the Union"
+    if "annual message" in l:
+        return "Annual Message"
+    if "farewell" in l:
+        return "Farewell Address"
+    if "press conference" in l or "news conference" in l:
+        return "Press/News Conference"
+    if "fireside" in l:
+        return "Fireside Chat"
+    if "debate" in l:
+        return "Debate"
+    if "acceptance" in l and ("nomination" in l or "convention" in l):
+        return "Nomination Acceptance"
+    if "oath" in l:
+        return "Oath of Office"
+    if "to congress" in l or "joint session" in l:
+        return "Address to Congress"
+    return "Other"
+
+
+def sotu_series(speech_type: str) -> bool:
+    """True if a speech is part of the unified State-of-the-Union series.
+
+    The Article II annual address to Congress was labeled 'Annual Message'
+    through 1928 and 'State of the Union' from 1929 on. Both are the same
+    institutional speech — this unifies them for cross-president comparison.
+    """
+    return speech_type in ("State of the Union", "Annual Message")
+
+
+def add_speech_metrics(df: pd.DataFrame, text_col: str = "transcript",
+                       title_col: str = "title") -> pd.DataFrame:
+    """Add per-speech language + classification columns to a speeches DataFrame.
+
+    Adds: word_count, self_count, collective_count, self_per_1k, collective_per_1k,
+    self_share (self / (self+collective)), speech_type, is_sotu_series.
+    Rates are per 1,000 words so speeches of different lengths are comparable.
+    Pure/deterministic — no external state — so it's reproducible in the pipeline.
+    """
+    out = df.copy()
+    metrics = out[text_col].fillna("").map(count_pronouns).apply(pd.Series)
+    out["word_count"] = metrics["word_count"]
+    out["self_count"] = metrics["self_count"]
+    out["collective_count"] = metrics["collective_count"]
+
+    wc = out["word_count"].replace(0, pd.NA)
+    out["self_per_1k"] = (out["self_count"] * 1000 / wc).astype("Float64").round(2)
+    out["collective_per_1k"] = (out["collective_count"] * 1000 / wc).astype("Float64").round(2)
+    denom = (out["self_count"] + out["collective_count"]).replace(0, pd.NA)
+    out["self_share"] = (out["self_count"] / denom).astype("Float64").round(4)
+
+    out["speech_type"] = out[title_col].fillna("").map(classify_speech_type)
+    out["is_sotu_series"] = out["speech_type"].map(sotu_series)
+    return out
