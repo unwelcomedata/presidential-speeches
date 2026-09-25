@@ -1,189 +1,141 @@
-# presidential-speeches
+# Presidential speeches — how presidents talk
 
-Quantitative text analysis of U.S. presidential speeches — word count, pronoun
-usage, vocabulary richness, and readability across presidents and over time.
+**[@unwelcomedata](https://github.com/unwelcomedata)** · data from public sources
 
-**Lead question (first cut):** *Which presidents lean on self (I/me/my) vs
-collective (we/us/our) framing in their speeches — and has presidential language
-grown more self-focused over time?* A single diverging bar (president ranking)
-plus a 1789→present trend line answer it.
+A quantitative look at **1,059 U.S. presidential speeches** from 45 presidents
+(1789→present), drawn from the University of Virginia Miller Center archive. The
+lead question: do presidents frame things around **self** (*I / me / my*) or the
+**collective** (*we / us / our*) — and how has that changed over 230 years?
 
-Scope note: the self/collective ratio depends heavily on **speech setting**
-(scripted State of the Union vs off-the-cuff remarks), so cuts by speech type and
-era are part of the analysis, not an afterthought. **Tier: serious** — sources are
-authoritative primary corpora only (see [SOURCES.md](SOURCES.md)).
+**The short answer:** the shift over time isn't rising self-focus — it's the
+**rise of "we."** In the State of the Union, collective language climbs steeply
+across the broadcast era while self-reference stays comparatively flat. The most
+"I"-leaning State of the Union presidents are 19th-century (Taft, Grant, Arthur);
+the most "we"-leaning are modern (Carter, Kennedy).
 
-**Primary source:** the University of Virginia Miller Center curated presidential
-speech archive (1,000+ speeches, Washington → present, public domain). The fuller
-American Presidency Project (UCSB) corpus is a planned later expansion.
+---
+
+## The charts
+
+Each chart is rendered for the web (click any chart to open it full-size). Figures
+are averages **within one speech type** — State of the Union or Inaugural — because
+the self/collective mix depends heavily on the setting, and because the corpus mixes
+eras (see *How it was measured*).
+
+### State of the Union — self vs collective, by president
+Each dot is one president's average across their State of the Union addresses (per
+1,000 words), placed at their first SOTU year: collective *we/us/our* vs self
+*I/me/my*.
+
+[![SOTU self vs collective by president](docs/01_sotu_self_vs_collective_by_president.png)](docs/01_sotu_self_vs_collective_by_president.png)
+
+### The "I" presidents and the "we" presidents (State of the Union)
+Left: presidents whose SOTU first-person pronouns are most often **"I"** (share that
+are "I"). Right: most often **"we"** (share that are "we"). Top 10 each, ≥2 SOTUs.
+
+[![SOTU I vs we presidents](docs/02_sotu_i_vs_we_presidents.png)](docs/02_sotu_i_vs_we_presidents.png)
+
+### The "I" presidents and the "we" presidents (Inaugural addresses)
+The same cut for **inaugural addresses** — left = most "I" (share that are "I"),
+right = most "we" (share that are "we").
+
+[![Inaugural I vs we presidents](docs/03_inaugural_i_vs_we_presidents.png)](docs/03_inaugural_i_vs_we_presidents.png)
+
+### Every president's lean toward "I" or "we", chronologically (State of the Union)
+All SOTU presidents (≥2 SOTUs) in time order, diverging from a 50/50 split: right
+leans **"I"**, left leans **"we"**. The percentage on each bar is the leaning side's
+share.
+
+[![SOTU lean, chronological](docs/04_sotu_lean_all_chronological.png)](docs/04_sotu_lean_all_chronological.png)
+
+### Applause and laughter
+Transcriber markers of live audience reaction per president (presidents with ≥20
+markers): applause vs laughter. Almost entirely a broadcast-era phenomenon.
+
+[![Applause and laughter](docs/07_applause_and_laughter.png)](docs/07_applause_and_laughter.png)
+
+### Every president's most-used word, 1789→present
+Each president's single most-frequent word, in chronological order, colored by
+word-family. **"State"** dominates 1789–1909, giving way to **"world"** in the
+mid-century superpower era and **"people"** from the New Deal onward.
+
+[![Top word timeline](docs/08_top_word_timeline.png)](docs/08_top_word_timeline.png)
+
+Additional charts (State of the Union average length by president; speeches-per-year
+corpus coverage) are available in the repo (`docs/`).
+
+---
+
+## Word clouds — every president, three ways
+
+**[▶ Open the interactive word-cloud picker](docs/presidents.html)**
+
+Pick any of the 45 presidents and switch between three views:
+
+- **Distinctive** — words a president used far more than *other* presidents (TF-IDF);
+  their defining vocabulary.
+- **Most-used** — their own most-frequent words (common function words removed).
+- **Phrases** — distinctive two-word phrases (so "united states" stays one thing).
+
+Clouds show only words the president actually **spoke** — transcription cues like
+`[Applause]`/`[Laughter]`, and speaker-label scaffolding like "president" from
+`Q: Mr. President` attributions, are excluded (see *How it was measured*).
+
+---
+
+## How it was measured
+
+- **Metric — self vs collective.** For each speech, first-person pronouns are counted:
+  *self* = I, me, my, mine, myself (+ contractions); *collective* = we, us, our, ours,
+  ourselves (+ let's). `self_share` = self ÷ (self + collective); 0.5 is balanced.
+  Rates are per 1,000 words so speeches of different lengths compare fairly.
+- **Compared within one speech type.** The corpus is curated and its coverage is
+  uneven, so per-president comparisons are made *within* the State of the Union series
+  or *within* inaugural addresses — never pooled across settings.
+- **A real series break.** State of the Union messages were **written and read by a
+  clerk from 1801–1912**, then **spoken** from 1913 on. Length and style change sharply
+  at that break; charts note it, and length comparisons are read with it in mind.
+- **Words are counted transparently** — a simple lowercase tokenizer (HTML entities
+  decoded, tags stripped), an explicit stopword list, regular plurals folded to their
+  singular (slave+slaves = one word), and transcription scaffolding excluded. No hidden
+  NLP model; every count is explainable. Full detail in [SOURCES.md](SOURCES.md).
+- **Frequency measures use, not stance.** This counts what a president talked about,
+  not their position — "no new taxes" still counts "taxes." Negation and sentiment are
+  out of scope for a transparent frequency method.
+- **Measured as delivered.** Many speeches were ghostwritten; this analyzes the text
+  as delivered, not authorship.
+
+---
+
+## The data
+
+- **[Download the dataset (CSV)](export/presidential_speeches_v1.csv)** — one row per
+  speech, with pronoun counts, rates, `self_share`, speech type, and the written/spoken
+  era flag.
+- **[Codebook](export/presidential_speeches_v1_codebook.md)** — plain-English
+  description of every column.
+
+## Reproduce it
+
+The pipeline is committed in this repo. `src/` holds the ingest, cleaning, and
+feature/word-processing logic (`src/prepare.py` carries the transparent tokenizer,
+plural-folding, and scaffolding exclusions); `notebooks/` (on the `main` branch)
+narrate each stage from raw archive to the published charts. `config.yaml` documents
+the source and settings.
+
+---
+
+## Sources & license
+
+Primary source: the **University of Virginia Miller Center** curated presidential
+speech archive (public domain). Full attribution, collection method, definitions, the
+written/spoken series break, and known limitations are in [SOURCES.md](SOURCES.md).
+
+---
 
 > **AI-Assisted Development**
-> This project was built with the assistance of [Kiro](https://kiro.dev),
-> an AI-powered development environment. All data sourcing decisions,
-> methodology choices, and published findings are the responsibility of the
-> author. AI was used for code generation, data pipeline construction, and
-> research assistance — not for analysis conclusions or editorial judgment.
-
----
-
-## Data Sources
-
-All data sources are documented in [SOURCES.md](SOURCES.md) with full
-attribution, URLs, licenses, and retrieval notes.
-
-Source provenance is also recorded inside the project database:
-
-```sql
--- Open data/project.duckdb and run:
-SELECT * FROM _sources;
-```
-
----
-
-## Project Structure
-
-```
-presidential-speeches/
-├── config.yaml              ← sources, paths, export settings — edit this first
-├── SOURCES.md               ← full data source attribution
-├── requirements.txt
-├── data/
-│   ├── raw/                 ← original downloaded files, never modified
-│   ├── interim/             ← cleaned Parquet files (1:1 match DuckDB table names)
-│   ├── processed/           ← analysis-ready Parquet files
-│   └── project.duckdb       ← single-file database for the project
-├── export/                  ← packaged datasets (CSV, Excel, Parquet + codebook)
-├── outputs/                 ← exploratory chart PNGs (from 04-viz)
-│   └── social/             ← publication-ready charts for posting (from 04b-viz-social)
-├── scripts/
-│   ├── README.md            ← pipeline run order and conventions
-│   ├── ingest_all.py        ← reproducible ingestion
-│   ├── clean_all.py         ← standardize raw tables
-│   └── prepare_export.py    ← build final export
-├── notebooks/
-│   ├── 00-explore.ipynb     ← DuckDB query sandbox
-│   ├── 01-ingest.ipynb      ← fetch sources → data/raw/ → DuckDB
-│   ├── 02-clean.ipynb       ← clean + quality checks → data/interim/
-│   ├── 03-prepare.ipynb     ← feature engineering + export packaging
-│   ├── 04-viz.ipynb         ← exploratory charts → outputs/
-│   ├── 04b-viz-social.ipynb ← publication social charts → outputs/social/
-│   └── 05-analysis.ipynb    ← statistical analysis + findings
-└── src/
-    ├── ingest.py            ← fetch helpers (caching, rate limiting)
-    ├── clean_quality.py     ← DuckDB cleaning + quality reports + _sources
-    ├── prepare.py           ← PII stripping, codebook, packaging
-    ├── viz.py               ← matplotlib chart builders (exploratory)
-    └── viz_social.py        ← Altair + vl-convert social export
-```
-
----
-
-## Workflow
-
-### 1. Configure `config.yaml`
-
-Add each data source under the `sources:` block before ingesting:
-
-```yaml
-sources:
-  my_source:
-    url: https://example.gov/data/table
-    type: html_table      # html_table | html_scrape | csv | json
-    table_index: 0
-    js_render: false
-```
-
-### 2. Document sources in `SOURCES.md`
-
-Before ingesting any data, add an entry to `SOURCES.md` for each source:
-- Full URL
-- Publisher / agency
-- License
-- Fields used
-- Any caveats
-
-### 3. Ingest (`01-ingest.ipynb`)
-
-```python
-from src.ingest import load_config, ingest_source
-cfg = load_config("config.yaml")
-df = ingest_source("my_source", cfg)
-```
-
-Raw files land in `data/raw/` untouched. All tables load into DuckDB at
-`data/project.duckdb` with source metadata written to `_sources`.
-
-### 4. Clean (`02-clean.ipynb`)
-
-```python
-from src.clean_quality import get_connection, clean_table, quality_report, save_interim
-con = get_connection(cfg)
-df_clean = clean_table(df, "my_source_raw", con, cast_map={"year": "INTEGER"})
-quality_report(df_clean, "my_source_clean", con)
-save_interim(df_clean, cfg, "my_source_clean.parquet")
-```
-
-### 5. Prepare & export (`03-prepare.ipynb`)
-
-```python
-from src.prepare import package_dataset
-package_dataset(df, cfg, name="my_dataset_v1",
-                codebook={"col": "description"},
-                notes="Source: Agency. License: Public domain.")
-```
-
-### 6. Visualize (`04-viz.ipynb` + `04b-viz-social.ipynb`)
-
-**04-viz** is for exploratory charting (matplotlib). Output goes to `outputs/`.
-
-```python
-from src.viz import ranked_bar_chart, save_chart
-fig = ranked_bar_chart(df, x="state", y="rate", title="Top 10 States", top_n=10,
-                       preset="instagram_portrait")
-save_chart(fig, cfg, "top10_states", preset="instagram_portrait",
-           add_watermark="@unwelcomedata")
-```
-
-**04b-viz-social** is for publication-ready charts (Altair + vl-convert).
-Output goes to `outputs/social/`. Only curated, validated charts go here.
-
-```python
-from src.viz_social import save_social
-save_social(chart, cfg, 'my_social_chart', preset='twitter_landscape')
-```
-
-### 7. Analyze (`05-analysis.ipynb`)
-
-Statistical analysis, regression, group comparisons. Always read from the
-**export** parquet (not raw DuckDB tables) to ensure consistency with
-published data.
-
----
-
-## Publishing (when the project is ready to go public)
-
-Full procedure is in `.kiro/steering/public-release.md`. The essentials:
-
-1. **Validate first (required gate).** Ship a `scripts/validate_charts.py` that
-   re-checks the chart data against DuckDB (export drift, headline facts,
-   invariants) and run it — it must exit 0 before anything goes public. See
-   `scripts/README.md`.
-2. **Curate a `release` branch** for the public tree (fun tier drops
-   notebooks/src/scripts/config; serious tier keeps src + a reproducible
-   entrypoint). Force-add the CSV + codebook exports and the `docs/` charts.
-3. **`_config.yml`** (root, on both `main` and `release`): set `title:` to the
-   **project name** so the Cayman banner names the project — NOT the generic
-   `@unwelcomedata` (that leaves the page looking untitled). Put the brand in
-   `description:`. Theme is always `jekyll-theme-cayman` (shared identity).
-4. **README brand line** links `@unwelcomedata` to the **GitHub profile**
-   (`https://github.com/unwelcomedata`), never a self-link to the project's own
-   Pages URL.
-5. After publishing, **`git checkout main`** — leaving the repo on `release`
-   strips the notebooks from the working copy and looks like they vanished
-   (they're safe on `main`).
-
-## Anonymity
-
-Commits are authored as `unwelcomedata` to keep the author's real identity
-off the public commit history. Data files, exports, outputs, and `.env`
-secrets are excluded from version control via `.gitignore`.
+> This project was built with the assistance of [Kiro](https://kiro.dev), an
+> AI-powered development environment. All data sourcing decisions, methodology
+> choices, and published findings are the responsibility of the author. AI was used
+> for code generation, data pipeline construction, and research assistance — not for
+> analysis conclusions or editorial judgment.
