@@ -17,6 +17,7 @@ ipykernel==6.29.5
 matplotlib==3.10.3
 Pillow==12.3.0               # chart rendering (Pillow-based pipeline)
 geopandas==1.0.1             # choropleth maps (optional, only if mapping)
+wordcloud==1.9.6             # per-president word clouds (renders to a PIL image)
 
 # --- data packaging ---
 openpyxl==3.1.5              # Excel export for sellable datasets

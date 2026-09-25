@@ -1,0 +1,48 @@
+president,term_start,term_end,notes
+George Washington,1789-04-30,1797-03-04,Two full terms
+John Adams,1797-03-04,1801-03-04,One term
+Thomas Jefferson,1801-03-04,1809-03-04,Two full terms
+James Madison,1809-03-04,1817-03-04,Two full terms
+James Monroe,1817-03-04,1825-03-04,Two full terms
+John Quincy Adams,1825-03-04,1829-03-04,One term
+Andrew Jackson,1829-03-04,1837-03-04,Two full terms
+Martin Van Buren,1837-03-04,1841-03-04,One term
+William Harrison,1841-03-04,1841-04-04,Died 31 days into term
+John Tyler,1841-04-04,1845-03-04,Succeeded W. Harrison; served remainder
+James K. Polk,1845-03-04,1849-03-04,One term
+Zachary Taylor,1849-03-04,1850-07-09,Died in office
+Millard Fillmore,1850-07-09,1853-03-04,Succeeded Taylor; served remainder
+Franklin Pierce,1853-03-04,1857-03-04,One term
+James Buchanan,1857-03-04,1861-03-04,One term
+Abraham Lincoln,1861-03-04,1865-04-15,Assassinated early in second term
+Andrew Johnson,1865-04-15,1869-03-04,Succeeded Lincoln; served remainder
+Ulysses S. Grant,1869-03-04,1877-03-04,Two full terms
+Rutherford B. Hayes,1877-03-04,1881-03-04,One term
+James A. Garfield,1881-03-04,1881-09-19,Assassinated; ~200 days in office
+Chester A. Arthur,1881-09-19,1885-03-04,Succeeded Garfield; served remainder
+Grover Cleveland,1885-03-04,1889-03-04,First (non-consecutive) term
+Grover Cleveland,1893-03-04,1897-03-04,Second (non-consecutive) term
+Benjamin Harrison,1889-03-04,1893-03-04,One term (between Cleveland's two)
+William McKinley,1897-03-04,1901-09-14,Assassinated early in second term
+Theodore Roosevelt,1901-09-14,1909-03-04,Succeeded McKinley then won a full term
+William Taft,1909-03-04,1913-03-04,One term
+Woodrow Wilson,1913-03-04,1921-03-04,Two full terms
+Warren G. Harding,1921-03-04,1923-08-02,Died in office
+Calvin Coolidge,1923-08-02,1929-03-04,Succeeded Harding then won a full term
+Herbert Hoover,1929-03-04,1933-03-04,One term
+Franklin D. Roosevelt,1933-03-04,1945-04-12,Four terms; died in office (longest tenure)
+Harry S. Truman,1945-04-12,1953-01-20,Succeeded FDR then won a full term
+Dwight D. Eisenhower,1953-01-20,1961-01-20,Two full terms
+John F. Kennedy,1961-01-20,1963-11-22,Assassinated
+Lyndon B. Johnson,1963-11-22,1969-01-20,Succeeded JFK then won a full term
+Richard M. Nixon,1969-01-20,1974-08-09,Resigned
+Gerald Ford,1974-08-09,1977-01-20,Succeeded Nixon; not elected
+Jimmy Carter,1977-01-20,1981-01-20,One term
+Ronald Reagan,1981-01-20,1989-01-20,Two full terms
+George H. W. Bush,1989-01-20,1993-01-20,One term
+Bill Clinton,1993-01-20,2001-01-20,Two full terms
+George W. Bush,2001-01-20,2009-01-20,Two full terms
+Barack Obama,2009-01-20,2017-01-20,Two full terms
+Donald Trump,2017-01-20,2021-01-20,First (non-consecutive) term
+Donald Trump,2025-01-20,2026-09-25,Second term in progress; end = data retrieval date (days accrued so far)
+Joe Biden,2021-01-20,2025-01-20,One term

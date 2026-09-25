@@ -64,6 +64,13 @@ env/
 tmp/
 temp/
 
+# ── Exploration-stage picker output (regenerable via scripts/build_president_pages.py) ──
+# The per-president word-cloud PNGs + picker HTML are generated output, not
+# reviewed/published yet. Regenerate from the script; curate into a release
+# branch when the owner approves the picker for publishing.
+docs/presidents/
+docs/presidents.html
+
 # ── Artifacts (dev-only docs, not committed) ──────────────────────────────────
 # Project status, plans, analysis findings, data pull guides, social posts, etc.
 # These assist development but are not part of the published dataset.

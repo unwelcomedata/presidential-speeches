@@ -331,12 +331,16 @@ _WORD_RE = _re.compile(r"[a-z]+(?:'[a-z]+)?")
 def tokenize(text: str) -> list[str]:
     """Lowercase word-tokenize, preserving contractions (apostrophes normalized).
 
-    Returns a list of lowercase tokens. Curly apostrophes (\u2019) are normalized to
-    straight quotes so contractions like "I\u2019m" and "I'm" tokenize identically.
+    Returns a list of lowercase tokens. HTML entities in the source transcripts
+    (e.g. ``&ldquo;`` ``&mdash;`` ``&amp;`` ``&nbsp;``) are decoded first so their
+    fragments ("ldquo", "mdash", "amp") don't leak in as fake words. Curly
+    apostrophes (\u2019) are normalized to straight quotes so contractions like
+    "I\u2019m" and "I'm" tokenize identically.
     """
     if not text:
         return []
-    t = text.lower().replace("\u2019", "'")
+    import html
+    t = html.unescape(text).lower().replace("\u2019", "'")
     return _WORD_RE.findall(t)
 
 
@@ -436,3 +440,124 @@ def add_speech_metrics(df: pd.DataFrame, text_col: str = "transcript",
     out["speech_type"] = out[title_col].fillna("").map(classify_speech_type)
     out["is_sotu_series"] = out["speech_type"].map(sotu_series)
     return out
+
+
+# Word frequency + distinctiveness (for word clouds / "defining words") ------
+# A transparent stopword list (function words + a few speech-boilerplate terms).
+# Kept explicit so the codebook can state exactly what was removed — no hidden
+# library list. Extend deliberately, not reflexively.
+
+_STOPWORDS = {
+    # articles / conjunctions / prepositions
+    "a", "an", "the", "and", "or", "but", "nor", "so", "yet", "for", "of", "to",
+    "in", "on", "at", "by", "with", "from", "as", "into", "onto", "upon", "over",
+    "under", "about", "against", "between", "through", "during", "before", "after",
+    "above", "below", "up", "down", "out", "off", "than", "then", "once", "here",
+    "there", "when", "where", "why", "how", "all", "any", "both", "each", "few",
+    "more", "most", "other", "some", "such", "no", "not", "only", "own", "same",
+    "too", "very", "can", "will", "just", "should", "now",
+    # pronouns / determiners (incl. the I/we set — counted separately, not "words")
+    "i", "me", "my", "mine", "myself", "we", "us", "our", "ours", "ourselves",
+    "you", "your", "yours", "yourself", "yourselves", "he", "him", "his",
+    "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they",
+    "them", "their", "theirs", "themselves", "this", "that", "these", "those",
+    "who", "whom", "whose", "which", "what",
+    # be / have / do / modal verbs
+    "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had",
+    "having", "do", "does", "did", "doing", "would", "could", "shall", "may",
+    "might", "must", "ought",
+    # common contractions (post-tokenizer these survive as one token)
+    "i'm", "i've", "i'll", "i'd", "we're", "we've", "we'll", "we'd", "let's",
+    "don't", "it's", "that's", "we", "cannot",
+    # speech boilerplate that is not "distinctive vocabulary"
+    "shall", "upon", "great", "every", "made", "make", "must", "us", "also",
+    "one", "two", "many", "much", "well", "still", "even", "much", "government",
+}
+
+
+def stopwords() -> set[str]:
+    """Return the project's transparent stopword set (copy)."""
+    return set(_STOPWORDS)
+
+
+def word_frequencies(text: str, extra_stop: set[str] | None = None,
+                     min_len: int = 3) -> "collections.Counter":
+    """Count content-word frequencies in one text (stopwords removed).
+
+    Tokens shorter than ``min_len`` and any stopword are dropped. Returns a
+    collections.Counter of token -> count. Uses the same transparent tokenizer
+    as the pronoun counts so results are consistent and codebook-explainable.
+    """
+    import collections
+    stop = _STOPWORDS | (extra_stop or set())
+    toks = [t for t in tokenize(text)
+            if len(t) >= min_len and t not in stop and "'" not in t]
+    return collections.Counter(toks)
+
+
+def top_words_by_group(df: pd.DataFrame, group_col: str, text_col: str,
+                       top_n: int = 50, extra_stop: set[str] | None = None,
+                       min_len: int = 3) -> pd.DataFrame:
+    """Aggregate content-word frequencies per group (e.g. per president).
+
+    Returns a long DataFrame: [group_col, word, count, rank] with the top_n
+    words per group by raw frequency. Good for the "common words" word cloud.
+    """
+    import collections
+    rows: list[dict[str, Any]] = []
+    for g, sub in df.groupby(group_col):
+        counter: collections.Counter = collections.Counter()
+        for txt in sub[text_col].fillna(""):
+            counter.update(word_frequencies(txt, extra_stop=extra_stop, min_len=min_len))
+        for rank, (word, count) in enumerate(counter.most_common(top_n), start=1):
+            rows.append({group_col: g, "word": word, "count": count, "rank": rank})
+    return pd.DataFrame(rows)
+
+
+def distinctive_words_by_group(df: pd.DataFrame, group_col: str, text_col: str,
+                               top_n: int = 50, extra_stop: set[str] | None = None,
+                               min_len: int = 4) -> pd.DataFrame:
+    """TF-IDF: words that DISTINGUISH each group from the others.
+
+    Each group (president) is one "document" = all their speeches concatenated.
+    Score = term frequency (within the group, per 10k content words) × inverse
+    document frequency (log(N_groups / groups_using_word)). High score = the word
+    is common for this president but rare across presidents overall — i.e. their
+    "defining" vocabulary. Pure Python (no sklearn) so it stays dependency-light
+    and the math is inspectable.
+
+    Returns long DataFrame: [group_col, word, tf_per_10k, idf, tfidf, rank].
+    """
+    import collections
+    import math
+
+    group_counts: dict[Any, collections.Counter] = {}
+    group_totals: dict[Any, int] = {}
+    doc_freq: collections.Counter = collections.Counter()  # groups using each word
+
+    for g, sub in df.groupby(group_col):
+        counter: collections.Counter = collections.Counter()
+        for txt in sub[text_col].fillna(""):
+            counter.update(word_frequencies(txt, extra_stop=extra_stop, min_len=min_len))
+        group_counts[g] = counter
+        group_totals[g] = sum(counter.values())
+        for word in counter:
+            doc_freq[word] += 1
+
+    n_groups = len(group_counts)
+    rows: list[dict[str, Any]] = []
+    for g, counter in group_counts.items():
+        total = group_totals[g] or 1
+        scored = []
+        for word, cnt in counter.items():
+            # ignore ultra-rare words in the group (noise)
+            if cnt < 3:
+                continue
+            tf = cnt * 10000.0 / total
+            idf = math.log(n_groups / doc_freq[word])
+            scored.append((word, tf, idf, tf * idf))
+        scored.sort(key=lambda x: x[3], reverse=True)
+        for rank, (word, tf, idf, tfidf) in enumerate(scored[:top_n], start=1):
+            rows.append({group_col: g, "word": word, "tf_per_10k": round(tf, 2),
+                         "idf": round(idf, 3), "tfidf": round(tfidf, 2), "rank": rank})
+    return pd.DataFrame(rows)
