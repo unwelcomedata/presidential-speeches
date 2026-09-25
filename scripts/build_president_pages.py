@@ -66,6 +66,26 @@ def slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 
 
+def _placeholder(title: str, message: str, w: int = 1600, h: int = 900):
+    """Render a clean 'not enough data' card (same canvas size as a cloud)."""
+    from PIL import Image, ImageDraw
+    try:
+        from chart_templates import _get_font, _hex_to_rgb  # reuse brand fonts/colors
+        f_title = _get_font(30, bold=True)
+        f_msg = _get_font(20)
+        title_rgb = _hex_to_rgb("#003049")
+        msg_rgb = _hex_to_rgb("#77818b")
+    except Exception:  # pragma: no cover - fallback if internals change
+        from PIL import ImageFont
+        f_title = f_msg = ImageFont.load_default()
+        title_rgb, msg_rgb = (0, 48, 73), (119, 129, 139)
+    img = Image.new("RGB", (w, h), (255, 255, 255))
+    d = ImageDraw.Draw(img)
+    d.text((48, 40), title, fill=title_rgb, font=f_title)
+    d.text((48, h // 2 - 12), message, fill=msg_rgb, font=f_msg)
+    return img
+
+
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect(str(DB), read_only=True)
@@ -88,21 +108,32 @@ def main() -> None:
     con.close()
 
     made = []  # (name, slug, n_speeches)
+    MIN_WORDS = 3  # below this, a cloud is too sparse to be meaningful
     for _, row in presidents.iterrows():
         name = row["president"]
         s = slug(name)
+        n_sp = int(row["n_speeches"])
         rendered_any = False
         for view, (_lbl, tbl, wcol, ttail, sub) in VIEWS.items():
             df = view_data[view]
             words = df[df["president"] == name][["word", wcol]]
-            if words.empty:
-                continue
-            img = word_cloud(
-                df=words, word_col="word", weight_col=wcol,
-                title=f"{name} \u2014 {ttail}",
-                subtitle=f"{sub} Curated corpus; speech as delivered (ghostwriting).",
-                source=SOURCE, img_width=1600, img_height=900,
-            )
+            # keep only positive-weight items (a 0-weight TF-IDF phrase like a
+            # universal "united states" carries no distinctiveness and would be
+            # dropped by the cloud renderer anyway).
+            words = words[words[wcol] > 0]
+            if len(words) < MIN_WORDS:
+                # too little text for this view (e.g. Garfield: 1 speech). Render a
+                # clear placeholder so the cloud reads as "not enough data", not broken.
+                img = _placeholder(f"{name} \u2014 {ttail}",
+                                   f"Not enough data for this view ({n_sp} speech"
+                                   f"{'' if n_sp == 1 else 's'} in the corpus).")
+            else:
+                img = word_cloud(
+                    df=words, word_col="word", weight_col=wcol,
+                    title=f"{name} \u2014 {ttail}",
+                    subtitle=f"{sub} Curated corpus; speech as delivered (ghostwriting).",
+                    source=SOURCE, img_width=1600, img_height=900,
+                )
             img.save(OUT_DIR / f"{s}_{view}.png", format="PNG", optimize=True)
             rendered_any = True
         if rendered_any:
