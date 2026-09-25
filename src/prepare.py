@@ -327,20 +327,40 @@ _STOPWORDS = {
 }
 
 
+# Stage-direction / transcription cues \u2014 NOT words the president spoke; they are
+# bracketed annotations ([Applause], [Laughter]) the transcriber inserted. They
+# must be kept OUT of word clouds (which show spoken vocabulary), but are counted
+# separately in their own chart. Concentrated in the broadcast/TV era.
+_STAGE_DIRECTIONS = {
+    "applause", "laughter", "laughs", "cheers", "cheering", "booing",
+    "inaudible", "crosstalk", "applauding",
+}
+
+
+def stage_directions() -> set[str]:
+    """Return the transcription stage-direction token set (copy)."""
+    return set(_STAGE_DIRECTIONS)
+
+
 def stopwords() -> set[str]:
-    """Return the project's transparent stopword set (copy)."""
-    return set(_STOPWORDS)
+    """Return the project's transparent stopword set (copy).
+
+    Includes stage-direction cues so word clouds never show them \u2014 clouds are
+    the president's spoken vocabulary, not the transcriber's [Applause] markup.
+    """
+    return set(_STOPWORDS) | set(_STAGE_DIRECTIONS)
 
 
 def word_frequencies(text: str, extra_stop: set[str] | None = None,
                      min_len: int = 3):
     """Count content-word frequencies in one text (stopwords removed).
 
-    Tokens shorter than ``min_len`` and any stopword are dropped. Returns a
-    collections.Counter of token -> count.
+    Tokens shorter than ``min_len``, any stopword, and stage-direction cues
+    (applause/laughter/...) are dropped \u2014 the result is spoken vocabulary only.
+    Returns a collections.Counter of token -> count.
     """
     import collections
-    stop = _STOPWORDS | (extra_stop or set())
+    stop = _STOPWORDS | _STAGE_DIRECTIONS | (extra_stop or set())
     toks = [t for t in tokenize(text)
             if len(t) >= min_len and t not in stop and "'" not in t]
     return collections.Counter(toks)
@@ -363,6 +383,38 @@ def top_words_by_group(df: pd.DataFrame, group_col: str, text_col: str,
         for rank, (word, count) in enumerate(counter.most_common(top_n), start=1):
             rows.append({group_col: g, "word": word, "count": count, "rank": rank})
     return pd.DataFrame(rows)
+
+
+def stage_direction_counts_by_group(df: pd.DataFrame, group_col: str,
+                                    text_col: str) -> pd.DataFrame:
+    """Count transcription stage directions (applause/laughter/...) per group.
+
+    These are NOT spoken words \u2014 they're the transcriber's bracketed cues, so
+    they're excluded from word clouds and shown separately here. Returns a wide
+    DataFrame: one row per group with a column per stage-direction token plus a
+    `total` column. Only groups with at least one cue are returned (most
+    pre-broadcast presidents have none). Also carries `total_words` for optional
+    per-1k normalization.
+    """
+    import collections
+    tokens = sorted(_STAGE_DIRECTIONS)
+    rows: list[dict[str, Any]] = []
+    for g, sub in df.groupby(group_col):
+        counts: collections.Counter = collections.Counter()
+        total_words = 0
+        for txt in sub[text_col].fillna(""):
+            toks = tokenize(txt)
+            total_words += len(toks)
+            counts.update(t for t in toks if t in _STAGE_DIRECTIONS)
+        total = sum(counts.values())
+        if total == 0:
+            continue
+        row = {group_col: g, "total": total, "total_words": total_words}
+        for tk in tokens:
+            row[tk] = counts.get(tk, 0)
+        rows.append(row)
+    out = pd.DataFrame(rows)
+    return out.sort_values("total", ascending=False).reset_index(drop=True) if len(out) else out
 
 
 def distinctive_words_by_group(df: pd.DataFrame, group_col: str, text_col: str,

@@ -37,15 +37,20 @@ OUT_DIR = PROJECT / "docs" / "presidents"
 HTML = PROJECT / "docs" / "presidents.html"
 SOURCE = "Miller Center (UVA) speech archive"
 
-# The two views: (suffix, DuckDB table, weight column, title tail, subtitle).
+# The two views: key -> (button label, DuckDB table, weight col, title tail, subtitle).
+# "distinctive" = words unusually characteristic of this president vs others (TF-IDF).
+# "most-used"   = this president's own most-frequent words (NOT "words in common with
+#                 others" — that phrasing misread; this is their raw top vocabulary).
 VIEWS = {
     "distinctive": (
-        "distinctive_words_by_president", "tfidf", "distinctive words",
-        "Words used far more than OTHER presidents (TF-IDF).",
+        "Distinctive", "distinctive_words_by_president", "tfidf",
+        "distinctive words",
+        "Words this president used far more than OTHER presidents (TF-IDF).",
     ),
-    "common": (
-        "word_freq_by_president", "count", "most common words",
-        "Words used most often (stopwords removed) \u2014 largely words every president uses.",
+    "most-used": (
+        "Most-used", "word_freq_by_president", "count",
+        "most-used words",
+        "This president\u2019s most frequently spoken words (common function words removed).",
     ),
 }
 
@@ -72,7 +77,7 @@ def main() -> None:
 
     view_data = {
         v: con.execute(f"SELECT president, word, {wcol} FROM {tbl}").df()
-        for v, (tbl, wcol, _t, _s) in VIEWS.items()
+        for v, (_lbl, tbl, wcol, _t, _s) in VIEWS.items()
     }
     con.close()
 
@@ -81,7 +86,7 @@ def main() -> None:
         name = row["president"]
         s = slug(name)
         rendered_any = False
-        for view, (tbl, wcol, ttail, sub) in VIEWS.items():
+        for view, (_lbl, tbl, wcol, ttail, sub) in VIEWS.items():
             df = view_data[view]
             words = df[df["president"] == name][["word", wcol]]
             if words.empty:
@@ -98,9 +103,21 @@ def main() -> None:
             made.append((name, s, int(row["n_speeches"])))
 
     default_slug = made[0][1] if made else ""
+    view_keys = list(VIEWS.keys())
+    default_view = view_keys[0]
     options = "\n".join(
         f'      <option value="{s}">{n} ({n_sp} speeches)</option>'
         for n, s, n_sp in made
+    )
+    # Toggle buttons + JS generated from VIEWS (no hardcoded view names).
+    buttons = "\n".join(
+        f'      <button id="btn-{v}" class="{"active" if v == default_view else ""}" '
+        f"onclick=\"setView('{v}')\">{VIEWS[v][0]}</button>"
+        for v in view_keys
+    )
+    btn_js = "\n    ".join(
+        f"document.getElementById('btn-{v}').className = (view==='{v}')?'active':'';"
+        for v in view_keys
     )
     html = f"""<!doctype html>
 <html lang="en">
@@ -132,9 +149,11 @@ def main() -> None:
   <h1>Word clouds by president</h1>
   <p class="lead">
     Pick a president and a view. <b>Distinctive</b> = words they used far more than
-    other presidents (TF-IDF). <b>Common</b> = words they used most (stopwords removed).
-    Word size = weight. Curated set of major speeches, measured as delivered
-    (many were ghostwritten).
+    other presidents (TF-IDF). <b>Most-used</b> = their own most-frequent words
+    (common function words removed). Word size = weight. Only words the president
+    actually spoke \u2014 transcription cues like [Applause]/[Laughter] are excluded
+    (see the separate audience-reaction chart). Curated set of major speeches,
+    measured as delivered (many were ghostwritten).
   </p>
   <div class="controls">
     <span><label for="pres">President</label>
@@ -142,23 +161,21 @@ def main() -> None:
 {options}
     </select></span>
     <span class="seg">
-      <button id="btn-distinctive" class="active" onclick="setView('distinctive')">Distinctive</button>
-      <button id="btn-common" onclick="setView('common')">Common</button>
+{buttons}
     </span>
   </div>
   <div class="chart">
-    <img id="cloud" src="presidents/{default_slug}_distinctive.png" alt="word cloud">
+    <img id="cloud" src="presidents/{default_slug}_{default_view}.png" alt="word cloud">
   </div>
   <p class="note">Source: {SOURCE}. Exploration prototype.</p>
 </div>
 <script>
-  var view = 'distinctive';
+  var view = '{default_view}';
   function render() {{
     var s = document.getElementById('pres').value;
     document.getElementById('cloud').src = 'presidents/' + s + '_' + view + '.png';
     document.getElementById('cloud').alt = s + ' ' + view + ' words';
-    document.getElementById('btn-distinctive').className = (view==='distinctive')?'active':'';
-    document.getElementById('btn-common').className = (view==='common')?'active':'';
+    {btn_js}
   }}
   function swap() {{ render(); }}
   function setView(v) {{ view = v; render(); }}
