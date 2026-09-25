@@ -181,10 +181,13 @@ def main() -> None:
   .seg button.active {{ background: #005F73; color: #fff; border-color: #005F73; }}
   .chart img {{ width: 100%; height: auto; border: 1px solid #eee; border-radius: 6px; }}
   .note {{ color: #77818b; font-size: 13px; margin-top: 14px; line-height: 1.5; }}
+  .backlink {{ display: inline-block; margin: 0 0 14px; font-size: 16px;
+               font-weight: 600; text-decoration: underline; color: #005F73; }}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <a class="backlink" href="../">&larr; Back to Presidential Speeches</a>
   <h1>Word clouds by president</h1>
   <p class="lead">
     Pick a president and a view. <b>Distinctive</b> = words they used far more than
