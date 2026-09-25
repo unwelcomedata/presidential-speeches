@@ -52,6 +52,12 @@ VIEWS = {
         "most-used words",
         "This president\u2019s most frequently spoken words (common function words removed).",
     ),
+    "phrases": (
+        "Phrases", "distinctive_phrases_by_president", "tfidf",
+        "distinctive phrases",
+        "Two-word phrases this president used far more than others (\u201cunited states\u201d "
+        "as one phrase, not two words).",
+    ),
 }
 
 

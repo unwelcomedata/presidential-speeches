@@ -112,6 +112,37 @@ crowd-edited references.
 
 ---
 
+## Text-analysis method & limitations
+
+The word/phrase analysis uses a deliberately transparent, inspectable method (no
+black-box model) so every count is explainable:
+
+- **Tokenization:** lowercase word tokens via a simple regex, after decoding HTML
+  entities and stripping HTML tags that appear in some source transcripts.
+  Contractions ("I'm", "we'll", "let's") are attributed to the pronoun they contain.
+- **Stopwords:** a transparent, explicit list of function words is removed for the
+  word/phrase views (the exact set lives in `src/prepare.py::stopwords()`).
+- **Transcription cues are not speech:** bracketed annotations the transcriber added
+  to mark live audience reaction — `[Applause]`, `[Laughter]`, etc. — are excluded
+  from word clouds (they aren't words the president spoke) and are charted separately
+  as audience reaction. `[Inaudible]` is a transcription gap, not a reaction, and is
+  excluded from that chart too.
+- **Phrases (bigrams):** a separate view counts two-word content phrases so that
+  multi-word concepts are not split into misleading single words — e.g. **"united
+  states"** is counted as one phrase (≈90% of the word "united" is "United States"),
+  distinct from a standalone "united" ("a united people"). A phrase is kept only when
+  **both** words are content words (neither a stopword nor a transcription cue).
+- **⭐ Frequency measures USE, not STANCE (key limitation):** this is word/phrase
+  *counting*, so it captures what a president talked about, NOT their position on it.
+  **Negation is not handled** — "no new taxes" counts the word "taxes"; "not afraid"
+  counts "afraid." Sentiment, sarcasm, and negation scope are out of scope for a
+  transparent frequency method and would require a different (less inspectable)
+  approach. Any published chart or caption must not imply stance from frequency alone.
+- **Ghostwriting:** these measure the speech *as delivered*, not necessarily the
+  president's own diction.
+
+---
+
 ## Source Provenance in DuckDB
 
 Every table in `data/project.duckdb` has a corresponding entry in the

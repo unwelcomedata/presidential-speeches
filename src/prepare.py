@@ -463,6 +463,82 @@ def distinctive_words_by_group(df: pd.DataFrame, group_col: str, text_col: str,
     return pd.DataFrame(rows)
 
 
+# Bigram (2-word phrase) analysis --------------------------------------------
+# Captures phrases where single words mislead: "united states" is one thing (90%
+# of "united" is "united states"), distinct from a standalone "united" ("a united
+# people"). A phrase is kept only when BOTH tokens are content words (neither a
+# stopword nor a stage-direction), so we get "american people" / "health care" /
+# "federal government", not glue like "of the". Contractions are dropped.
+# NOTE: this measures word/phrase USE, not stance \u2014 negation ("no new taxes")
+# still counts the content word; see SOURCES.md for that documented limitation.
+
+def content_bigrams(text: str, extra_stop: set[str] | None = None,
+                    min_len: int = 3):
+    """Yield content-word bigrams ("w1 w2") from one text.
+
+    A bigram is emitted only when both adjacent tokens are content words
+    (length >= min_len, not a stopword, not a stage-direction, no apostrophe).
+    Returns a collections.Counter of "w1 w2" -> count.
+    """
+    import collections
+    stop = _STOPWORDS | _STAGE_DIRECTIONS | (extra_stop or set())
+
+    def ok(tok: str) -> bool:
+        return len(tok) >= min_len and tok not in stop and "'" not in tok
+
+    toks = tokenize(text)
+    counter: collections.Counter = collections.Counter()
+    for a, b in zip(toks, toks[1:]):
+        if ok(a) and ok(b):
+            counter[f"{a} {b}"] += 1
+    return counter
+
+
+def distinctive_phrases_by_group(df: pd.DataFrame, group_col: str, text_col: str,
+                                 top_n: int = 50, extra_stop: set[str] | None = None,
+                                 min_len: int = 3) -> pd.DataFrame:
+    """TF-IDF over content bigrams: 2-word phrases that DISTINGUISH each group.
+
+    Same math as distinctive_words_by_group but on content bigrams, so "united
+    states" is one phrase (not double-counted as "united" + "states"). High score
+    = a phrase this president used far more than others. Returns long DataFrame:
+    [group_col, word, tf_per_10k, idf, tfidf, rank] ("word" holds the phrase, so
+    it drops straight into the word_cloud template).
+    """
+    import collections
+    import math
+
+    group_counts: dict[Any, "collections.Counter"] = {}
+    group_totals: dict[Any, int] = {}
+    doc_freq: "collections.Counter" = collections.Counter()
+
+    for g, sub in df.groupby(group_col):
+        counter: collections.Counter = collections.Counter()
+        for txt in sub[text_col].fillna(""):
+            counter.update(content_bigrams(txt, extra_stop=extra_stop, min_len=min_len))
+        group_counts[g] = counter
+        group_totals[g] = sum(counter.values())
+        for phrase in counter:
+            doc_freq[phrase] += 1
+
+    n_groups = len(group_counts)
+    rows: list[dict[str, Any]] = []
+    for g, counter in group_counts.items():
+        total = group_totals[g] or 1
+        scored = []
+        for phrase, cnt in counter.items():
+            if cnt < 3:  # ignore ultra-rare phrases (noise)
+                continue
+            tf = cnt * 10000.0 / total
+            idf = math.log(n_groups / doc_freq[phrase])
+            scored.append((phrase, tf, idf, tf * idf))
+        scored.sort(key=lambda x: x[3], reverse=True)
+        for rank, (phrase, tf, idf, tfidf) in enumerate(scored[:top_n], start=1):
+            rows.append({group_col: g, "word": phrase, "tf_per_10k": round(tf, 2),
+                         "idf": round(idf, 3), "tfidf": round(tfidf, 2), "rank": rank})
+    return pd.DataFrame(rows)
+
+
 def build_president_terms(terms_csv: str | Path, speeches: pd.DataFrame,
                           retrieval_date: str | None = None) -> pd.DataFrame:
     """Build the president tenure table (days in office + tenure-weighted rates).
