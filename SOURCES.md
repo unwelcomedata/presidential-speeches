@@ -50,7 +50,52 @@ not applicable or unknown, write "N/A" or "unknown" so it's clear it was conside
 
 ## Sources
 
-<!-- Add your sources below this line -->
+**Tier: serious.** Language analysis invites methodological scrutiny, so sources
+are authoritative primary corpora (university-curated / government), never
+crowd-edited references.
+
+### Miller Center Presidential Speech Archive (PRIMARY — first ingest)
+- **Publisher:** University of Virginia, Miller Center of Public Affairs
+- **URL:** https://data.millercenter.org/miller_center_speeches.tgz (landing page:
+  https://data.millercenter.org/)
+- **Format:** gzipped tar archive → expands to `speeches/` containing one JSON file
+  per speech (transcript + metadata: title, date of delivery, president).
+- **License:** Public domain (the speeches themselves are U.S. government works).
+  Miller Center requests a citation for the compiled archive.
+- **Fields used:** speech transcript text; president; speech title; date of delivery.
+  (Derived downstream: word counts, pronoun counts — self I/me/my/mine vs collective
+  we/us/our/ours — readability, vocabulary richness.)
+- **Coverage:** 1,000+ speeches, George Washington through the contemporary
+  presidency. NOT exhaustive — see collection method below.
+- **How the source collects the data:** Miller Center staff compiled and transcribed
+  a curated set of major presidential speeches. Transcripts are prepared by the
+  Center from public-domain presidential materials.
+- **How the source defines the data:** A "speech" here is a discrete address the
+  Center chose to include. **Inclusion is an explicit editorial decision** — the
+  archive is a curated set of notable/major speeches, not every utterance. This is a
+  selection bias to state plainly: it over-represents set-piece addresses (inaugurals,
+  State of the Union, major nationally-televised remarks) and under-represents routine
+  remarks, minor statements, and off-the-cuff press exchanges.
+- **Methodology changes / series breaks:** No formal versioned series breaks in the
+  file format. BUT the real comparability hazards for language analysis are: (1)
+  **coverage density varies by era** — far more speeches survive/are included for
+  modern presidents than for 19th-century ones, so per-president aggregates rest on
+  very different sample sizes; (2) the **written-address era vs the broadcast era** —
+  pre-radio messages to Congress were written documents, not delivered oratory, and
+  read very differently from televised speeches (a genuine style break to flag on any
+  1789→present trend). Treat "speeches per president" as a coverage artifact, not a
+  behavioral finding.
+- **Known controversies / debates:** The self-vs-collective ("I" vs "we") framing is
+  a common pop-linguistics claim; the honest caveat is that raw pronoun rates depend
+  heavily on **speech type** (a scripted SOTU vs off-the-cuff remarks) and on which
+  speeches happen to be in the curated set — so per-president comparisons must control
+  for, or at least disclose, the mix of speech types included. Ghostwriting also means
+  these measure the *speech as delivered*, not necessarily the president's own diction.
+- **Notes:** Bulk download replaced the deprecated API. Raw tgz + extracted JSON saved
+  verbatim under `data/raw/`; never edited. For a fuller corpus later, The American
+  Presidency Project (UCSB, ~130k documents categorized by type) is the intended
+  expansion source — see config.yaml.
+- **Retrieved:** (pending first ingest — fill in YYYY-MM-DD when 01-ingest runs)
 
 ---
 

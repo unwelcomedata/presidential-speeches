@@ -1,5 +1,22 @@
 # presidential-speeches
 
+Quantitative text analysis of U.S. presidential speeches — word count, pronoun
+usage, vocabulary richness, and readability across presidents and over time.
+
+**Lead question (first cut):** *Which presidents lean on self (I/me/my) vs
+collective (we/us/our) framing in their speeches — and has presidential language
+grown more self-focused over time?* A single diverging bar (president ranking)
+plus a 1789→present trend line answer it.
+
+Scope note: the self/collective ratio depends heavily on **speech setting**
+(scripted State of the Union vs off-the-cuff remarks), so cuts by speech type and
+era are part of the analysis, not an afterthought. **Tier: serious** — sources are
+authoritative primary corpora only (see [SOURCES.md](SOURCES.md)).
+
+**Primary source:** the University of Virginia Miller Center curated presidential
+speech archive (1,000+ speeches, Washington → present, public domain). The fuller
+American Presidency Project (UCSB) corpus is a planned later expansion.
+
 > **AI-Assisted Development**
 > This project was built with the assistance of [Kiro](https://kiro.dev),
 > an AI-powered development environment. All data sourcing decisions,
