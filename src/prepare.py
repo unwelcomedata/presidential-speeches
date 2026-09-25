@@ -337,6 +337,24 @@ _STAGE_DIRECTIONS = {
 }
 
 
+# Transcript SCAFFOLDING \u2014 tokens that come from the transcript's structure, not
+# from what the president actually said. Press-conference/debate transcripts label
+# every answer "The President:" and every question "Q: Mr. President, ...", so the
+# token "president" is massively inflated by attribution scaffolding (for LBJ,
+# Carter, Reagan it even out-ranks every real content word) rather than genuine
+# spoken use. Like the stage-direction cues, these are excluded from the spoken-
+# vocabulary views (most-used, distinctive, phrases). Kept a tiny, explicit, and
+# documented list \u2014 same philosophy as the stopword/stage-direction sets.
+_TRANSCRIPT_SCAFFOLD = {
+    "president",
+}
+
+
+def transcript_scaffold() -> set[str]:
+    """Return the transcript-scaffolding token set (copy)."""
+    return set(_TRANSCRIPT_SCAFFOLD)
+
+
 def stage_directions() -> set[str]:
     """Return the transcription stage-direction token set (copy)."""
     return set(_STAGE_DIRECTIONS)
@@ -345,34 +363,125 @@ def stage_directions() -> set[str]:
 def stopwords() -> set[str]:
     """Return the project's transparent stopword set (copy).
 
-    Includes stage-direction cues so word clouds never show them \u2014 clouds are
-    the president's spoken vocabulary, not the transcriber's [Applause] markup.
+    Includes stage-direction cues AND transcript-scaffolding tokens (e.g.
+    "president" from "Q: Mr. President" / "The President:" attributions) so word
+    clouds show the president's spoken vocabulary, not the transcript's structure.
     """
-    return set(_STOPWORDS) | set(_STAGE_DIRECTIONS)
+    return set(_STOPWORDS) | set(_STAGE_DIRECTIONS) | set(_TRANSCRIPT_SCAFFOLD)
 
 
 def word_frequencies(text: str, extra_stop: set[str] | None = None,
                      min_len: int = 3):
     """Count content-word frequencies in one text (stopwords removed).
 
-    Tokens shorter than ``min_len``, any stopword, and stage-direction cues
-    (applause/laughter/...) are dropped \u2014 the result is spoken vocabulary only.
+    Tokens shorter than ``min_len``, any stopword, stage-direction cues
+    (applause/laughter/...), and transcript-scaffolding tokens ("president" from
+    Q&A/debate attributions) are dropped \u2014 the result is spoken vocabulary only.
     Returns a collections.Counter of token -> count.
     """
     import collections
-    stop = _STOPWORDS | _STAGE_DIRECTIONS | (extra_stop or set())
+    stop = _STOPWORDS | _STAGE_DIRECTIONS | _TRANSCRIPT_SCAFFOLD | (extra_stop or set())
     toks = [t for t in tokenize(text)
             if len(t) >= min_len and t not in stop and "'" not in t]
     return collections.Counter(toks)
 
 
+# Regular-plural grouping ----------------------------------------------------
+# A president's vocabulary shouldn't be split across "slave"/"slaves" or
+# "state"/"states" \u2014 the plural is the same concept. We fold regular English
+# plurals into their singular so counts (and TF-IDF) treat them as one word.
+#
+# Kept deliberately transparent (no stemmer / NLP model, matching the rest of
+# this module): a plural collapses to its singular ONLY when
+#   (1) it matches a regular-plural pattern with a computable singular, AND
+#   (2) that singular actually OCCURS in the same corpus scope.
+# Guard (2) is what makes this safe \u2014 it never invents a non-word and never
+# collapses irregular/false plurals whose singular the corpus doesn't use
+# ("arms" stays "arms" unless "arm" is also spoken; "news"/"congress"/"crisis"
+# are excluded by pattern). Irregular plurals (men/children) are left alone by
+# design \u2014 the codebook documents this as regular-plural grouping only.
+
+# Words ending in -s that are NOT plurals (their "singular" would be a different
+# word or a non-word). Explicit + transparent, like the stopword list. The
+# corpus guard already blocks most of these, but "news"->"new", "means"->"mean"
+# etc. are real words in the corpus, so name them here.
+_NOT_PLURAL = {
+    "news", "series", "species", "means", "politics", "ethics", "physics",
+    "economics", "always", "perhaps", "sometimes", "towards", "afterwards",
+    "thus", "less", "unless", "yes", "gas", "campus", "status", "focus",
+    "analysis", "basis", "emphasis",
+}
+
+
+def _singular_candidate(word: str) -> str | None:
+    """Return the regular-singular form of ``word`` if it looks like a regular
+    plural, else None. Pattern-only (does not check the corpus).
+
+    Rules (English regular plurals):
+      -ies -> -y     (cities -> city)      [len(stem) >= 2]
+      -es  -> drop   (taxes -> tax, churches -> church) after s/x/z/ch/sh
+      -s   -> drop   (slaves -> slave, laws -> law)
+    Excludes -ss (congress), -us (consensus), -is (crisis), -ous (famous), a
+    hand-listed set of non-plural -s words (news/series/means/politics/...), and
+    anything too short to have a real singular.
+    """
+    w = word
+    if len(w) < 4 or not w.endswith("s") or w in _NOT_PLURAL:
+        return None
+    if w.endswith("ss") or w.endswith("us") or w.endswith("is") or w.endswith("ous"):
+        return None
+    if w.endswith("ies") and len(w) >= 5:
+        return w[:-3] + "y"          # cities -> city
+    if w.endswith(("ses", "xes", "zes", "ches", "shes")):
+        return w[:-2]                # taxes -> tax, churches -> church
+    if w.endswith("es") and len(w) >= 5:
+        # ambiguous: "states"->"state" (drop only s) vs "boxes"->"box" (handled
+        # above). For plain -es not after s/x/z/ch/sh, the singular is the -s
+        # form ("states"->"state", "causes"->"cause"); try dropping just "s".
+        return w[:-1]
+    return w[:-1]                     # slaves -> slave, laws -> law
+
+
+def _plural_fold_map(vocab) -> dict[str, str]:
+    """Build {plural -> singular} for a vocabulary, applying the corpus guard:
+    a plural maps to its singular candidate only if that singular is also in
+    ``vocab``. Transparent and inspectable.
+    """
+    vocab = set(vocab)
+    fold: dict[str, str] = {}
+    for w in vocab:
+        sing = _singular_candidate(w)
+        if sing and sing != w and sing in vocab:
+            fold[w] = sing
+    return fold
+
+
+def fold_regular_plurals(counter):
+    """Collapse regular plurals into their singular within one Counter.
+
+    Only folds a plural when its singular form is also present in the same
+    Counter (the corpus guard), so counts merge onto a word the president
+    actually used. Returns a NEW Counter; the input is unchanged.
+    """
+    import collections
+    fold = _plural_fold_map(counter.keys())
+    if not fold:
+        return counter
+    out: collections.Counter = collections.Counter()
+    for word, cnt in counter.items():
+        out[fold.get(word, word)] += cnt
+    return out
+
+
 def top_words_by_group(df: pd.DataFrame, group_col: str, text_col: str,
                        top_n: int = 50, extra_stop: set[str] | None = None,
-                       min_len: int = 3) -> pd.DataFrame:
+                       min_len: int = 3, group_plurals: bool = True) -> pd.DataFrame:
     """Aggregate content-word frequencies per group (e.g. per president).
 
     Returns long DataFrame: [group_col, word, count, rank] with the top_n words
-    per group by raw frequency. Feeds the "common words" word cloud.
+    per group by raw frequency. Feeds the "most-used words" word cloud. When
+    ``group_plurals`` (default), regular plurals are folded into their singular
+    per group (slave+slaves -> slave) via ``fold_regular_plurals``.
     """
     import collections
     rows: list[dict[str, Any]] = []
@@ -380,6 +489,8 @@ def top_words_by_group(df: pd.DataFrame, group_col: str, text_col: str,
         counter: collections.Counter = collections.Counter()
         for txt in sub[text_col].fillna(""):
             counter.update(word_frequencies(txt, extra_stop=extra_stop, min_len=min_len))
+        if group_plurals:
+            counter = fold_regular_plurals(counter)
         for rank, (word, count) in enumerate(counter.most_common(top_n), start=1):
             rows.append({group_col: g, "word": word, "count": count, "rank": rank})
     return pd.DataFrame(rows)
@@ -419,13 +530,15 @@ def stage_direction_counts_by_group(df: pd.DataFrame, group_col: str,
 
 def distinctive_words_by_group(df: pd.DataFrame, group_col: str, text_col: str,
                                top_n: int = 50, extra_stop: set[str] | None = None,
-                               min_len: int = 4) -> pd.DataFrame:
+                               min_len: int = 4, group_plurals: bool = True) -> pd.DataFrame:
     """TF-IDF: words that DISTINGUISH each group from the others.
 
     Each group (president) = one document (all their speeches). Score = term
     frequency (per 10k content words) × log(N_groups / groups_using_word). High
     score = common for this president, rare across presidents = their defining
-    vocabulary. Pure Python (no sklearn), math inspectable.
+    vocabulary. Pure Python (no sklearn), math inspectable. When ``group_plurals``
+    (default), regular plurals are folded into their singular per group before
+    scoring (slave+slaves -> slave), so the two aren't split.
 
     Returns long DataFrame: [group_col, word, tf_per_10k, idf, tfidf, rank].
     """
@@ -440,6 +553,8 @@ def distinctive_words_by_group(df: pd.DataFrame, group_col: str, text_col: str,
         counter: collections.Counter = collections.Counter()
         for txt in sub[text_col].fillna(""):
             counter.update(word_frequencies(txt, extra_stop=extra_stop, min_len=min_len))
+        if group_plurals:
+            counter = fold_regular_plurals(counter)
         group_counts[g] = counter
         group_totals[g] = sum(counter.values())
         for word in counter:
@@ -481,7 +596,7 @@ def content_bigrams(text: str, extra_stop: set[str] | None = None,
     Returns a collections.Counter of "w1 w2" -> count.
     """
     import collections
-    stop = _STOPWORDS | _STAGE_DIRECTIONS | (extra_stop or set())
+    stop = _STOPWORDS | _STAGE_DIRECTIONS | _TRANSCRIPT_SCAFFOLD | (extra_stop or set())
 
     def ok(tok: str) -> bool:
         return len(tok) >= min_len and tok not in stop and "'" not in tok

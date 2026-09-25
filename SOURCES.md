@@ -122,11 +122,31 @@ black-box model) so every count is explainable:
   Contractions ("I'm", "we'll", "let's") are attributed to the pronoun they contain.
 - **Stopwords:** a transparent, explicit list of function words is removed for the
   word/phrase views (the exact set lives in `src/prepare.py::stopwords()`).
+- **Regular-plural grouping:** for the single-word views (most-used + distinctive),
+  regular English plurals are folded into their singular so a president's vocabulary
+  isn't split across the same concept — `slave`/`slaves` and `state`/`states` each
+  count as one word. This is rule-based and corpus-guarded, not a stemmer/NLP model
+  (`src/prepare.py::fold_regular_plurals`): a plural collapses only when it matches a
+  regular-plural pattern AND its singular actually occurs in that president's own
+  speech, so it never invents a non-word. Words that merely end in "s" but are not
+  plurals (`congress`, `crisis`, `news`, `series`, `politics`) are excluded by pattern
+  plus a short hand list; irregular plurals (`men`, `children`) are left as-is. The
+  two-word **phrase** view is deliberately NOT folded — "united states" must stay
+  "united states", not "united state".
 - **Transcription cues are not speech:** bracketed annotations the transcriber added
   to mark live audience reaction — `[Applause]`, `[Laughter]`, etc. — are excluded
   from word clouds (they aren't words the president spoke) and are charted separately
   as audience reaction. `[Inaudible]` is a transcription gap, not a reaction, and is
   excluded from that chart too.
+- **Transcript scaffolding is not speech:** press-conference and debate transcripts
+  carry speaker labels and question attributions in the body text — `The President:`
+  before each answer, `Q: Mr. President, ...` before each reporter question. These
+  make the token **"president"** a transcript-structure artifact rather than genuine
+  spoken use (for the heavy-Q&A presidents it even out-ranks every real content word),
+  so "president" is excluded from the spoken-vocabulary views (most-used, distinctive,
+  phrases). The exclusion list is small, explicit, and documented in
+  `src/prepare.py::transcript_scaffold()` — same approach as the stopword and
+  stage-direction sets.
 - **Phrases (bigrams):** a separate view counts two-word content phrases so that
   multi-word concepts are not split into misleading single words — e.g. **"united
   states"** is counted as one phrase (≈90% of the word "united" is "United States"),
