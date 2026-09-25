@@ -95,7 +95,7 @@ crowd-edited references.
   verbatim under `data/raw/`; never edited. For a fuller corpus later, The American
   Presidency Project (UCSB, ~130k documents categorized by type) is the intended
   expansion source — see config.yaml.
-- **Retrieved:** (pending first ingest — fill in YYYY-MM-DD when 01-ingest runs)
+- **Retrieved:** 2026-09-25 (1,059 speeches, 45 presidents, 1789-04-30 → 2026-07-16)
 
 ---
 
