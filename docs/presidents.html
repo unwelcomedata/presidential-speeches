@@ -21,10 +21,13 @@
   .seg button.active { background: #005F73; color: #fff; border-color: #005F73; }
   .chart img { width: 100%; height: auto; border: 1px solid #eee; border-radius: 6px; }
   .note { color: #77818b; font-size: 13px; margin-top: 14px; line-height: 1.5; }
+  .backlink { display: inline-block; margin: 0 0 14px; font-size: 16px;
+               font-weight: 600; text-decoration: underline; color: #005F73; }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <a class="backlink" href="../">&larr; Back to Presidential Speeches</a>
   <h1>Word clouds by president</h1>
   <p class="lead">
     Pick a president and a view. <b>Distinctive</b> = words they used far more than
@@ -56,8 +59,8 @@
       <option value="andrew-johnson">Andrew Johnson (31 speeches)</option>
       <option value="ulysses-s-grant">Ulysses S. Grant (32 speeches)</option>
       <option value="rutherford-b-hayes">Rutherford B. Hayes (16 speeches)</option>
-      <option value="chester-a-arthur">Chester A. Arthur (11 speeches)</option>
       <option value="james-a-garfield">James A. Garfield (1 speeches)</option>
+      <option value="chester-a-arthur">Chester A. Arthur (11 speeches)</option>
       <option value="grover-cleveland">Grover Cleveland (32 speeches)</option>
       <option value="benjamin-harrison">Benjamin Harrison (16 speeches)</option>
       <option value="william-mckinley">William McKinley (14 speeches)</option>
@@ -90,15 +93,15 @@
     </span>
   </div>
   <div class="chart">
-    <img id="cloud" src="presidents/george-washington_distinctive.png?v=1790378600" alt="word cloud"
+    <img id="cloud" src="presidents/george-washington_distinctive.png?v=1790379686" alt="word cloud"
          onerror="this.alt='(cloud not generated for this president/view)';">
   </div>
-  <p class="note">Source: Miller Center (UVA) speech archive. Exploration prototype. build 1790378600</p>
+  <p class="note">Source: Miller Center (UVA) speech archive. Exploration prototype. build 1790379686</p>
 </div>
 <script>
   // ?v=BUILD is a cache-buster so the browser always loads the current PNGs
   // (regenerating the picker changes BUILD, forcing a fresh fetch).
-  var BUILD = '1790378600';
+  var BUILD = '1790379686';
   var view = 'distinctive';
   function render() {
     var s = document.getElementById('pres').value;
