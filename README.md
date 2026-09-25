@@ -95,6 +95,10 @@ Clouds show only words the president actually **spoke** — transcription cues l
 - **A real series break.** State of the Union messages were **written and read by a
   clerk from 1801–1912**, then **spoken** from 1913 on. Length and style change sharply
   at that break; charts note it, and length comparisons are read with it in mind.
+- **The early "I" presidents, in context.** The most "I"-leaning presidents are
+  19th-century — which partly reflects the formal *written-message* style of that era
+  (and, for a few, a smaller number of speeches in the corpus), not just personal
+  disposition. Read the early end of the rankings as era-as-much-as-person.
 - **Words are counted transparently** — a simple lowercase tokenizer (HTML entities
   decoded, tags stripped), an explicit stopword list, regular plurals folded to their
   singular (slave+slaves = one word), and transcription scaffolding excluded. No hidden

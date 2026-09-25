@@ -160,6 +160,13 @@ black-box model) so every count is explainable:
   approach. Any published chart or caption must not imply stance from frequency alone.
 - **Ghostwriting:** these measure the speech *as delivered*, not necessarily the
   president's own diction.
+- **Early "I"-leaning presidents reflect era + sample size, not only disposition:**
+  the highest self-share presidents are 19th-century, which partly reflects the formal
+  *written-message* style of the pre-1913 era and, for a few short-tenure presidents, a
+  smaller number of speeches in the corpus. Read the early end of the pronoun rankings
+  as era-as-much-as-person. (Independent validation, 2026-09-25, corroborated the
+  Taft/Grant/Washington high-"I" outliers against American Presidency Project-derived
+  studies and flagged this framing note.)
 
 ---
 
