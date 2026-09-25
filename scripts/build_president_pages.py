@@ -108,6 +108,8 @@ def main() -> None:
         if rendered_any:
             made.append((name, s, int(row["n_speeches"])))
 
+    import time
+    build_id = str(int(time.time()))  # cache-buster: changes every regeneration
     default_slug = made[0][1] if made else ""
     view_keys = list(VIEWS.keys())
     default_view = view_keys[0]
@@ -171,15 +173,19 @@ def main() -> None:
     </span>
   </div>
   <div class="chart">
-    <img id="cloud" src="presidents/{default_slug}_{default_view}.png" alt="word cloud">
+    <img id="cloud" src="presidents/{default_slug}_{default_view}.png?v={build_id}" alt="word cloud"
+         onerror="this.alt='(cloud not generated for this president/view)';">
   </div>
-  <p class="note">Source: {SOURCE}. Exploration prototype.</p>
+  <p class="note">Source: {SOURCE}. Exploration prototype. build {build_id}</p>
 </div>
 <script>
+  // ?v=BUILD is a cache-buster so the browser always loads the current PNGs
+  // (regenerating the picker changes BUILD, forcing a fresh fetch).
+  var BUILD = '{build_id}';
   var view = '{default_view}';
   function render() {{
     var s = document.getElementById('pres').value;
-    document.getElementById('cloud').src = 'presidents/' + s + '_' + view + '.png';
+    document.getElementById('cloud').src = 'presidents/' + s + '_' + view + '.png?v=' + BUILD;
     document.getElementById('cloud').alt = s + ' ' + view + ' words';
     {btn_js}
   }}
