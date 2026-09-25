@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Presidential speeches — word clouds by president</title>
+<style>
+  body { font-family: -apple-system, Helvetica, Arial, sans-serif; margin: 0;
+          color: #1c2530; background: #fff; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p.lead { color: #55606b; font-size: 15px; margin: 0 0 18px; line-height: 1.5; }
+  .controls { margin: 0 0 16px; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+  label { font-weight: 600; font-size: 14px; margin-right: 8px; }
+  select { font-size: 15px; padding: 7px 10px; border: 1px solid #c7ced5;
+            border-radius: 6px; background: #fff; min-width: 320px; }
+  .seg button { font-size: 14px; padding: 7px 14px; border: 1px solid #c7ced5;
+            background: #fff; cursor: pointer; }
+  .seg button:first-child { border-radius: 6px 0 0 6px; }
+  .seg button:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+  .seg button.active { background: #005F73; color: #fff; border-color: #005F73; }
+  .chart img { width: 100%; height: auto; border: 1px solid #eee; border-radius: 6px; }
+  .note { color: #77818b; font-size: 13px; margin-top: 14px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Word clouds by president</h1>
+  <p class="lead">
+    Pick a president and a view. <b>Distinctive</b> = words they used far more than
+    other presidents (TF-IDF). <b>Most-used</b> = their own most-frequent words
+    (common function words removed). Word size = weight. Only words the president
+    actually spoke — transcription cues like [Applause]/[Laughter] are excluded
+    (see the separate audience-reaction chart). Curated set of major speeches,
+    measured as delivered (many were ghostwritten).
+  </p>
+  <div class="controls">
+    <span><label for="pres">President</label>
+    <select id="pres" onchange="swap()">
+      <option value="george-washington">George Washington (21 speeches)</option>
+      <option value="john-adams">John Adams (9 speeches)</option>
+      <option value="thomas-jefferson">Thomas Jefferson (24 speeches)</option>
+      <option value="james-madison">James Madison (21 speeches)</option>
+      <option value="james-monroe">James Monroe (10 speeches)</option>
+      <option value="john-quincy-adams">John Quincy Adams (8 speeches)</option>
+      <option value="andrew-jackson">Andrew Jackson (26 speeches)</option>
+      <option value="martin-van-buren">Martin Van Buren (10 speeches)</option>
+      <option value="william-harrison">William Harrison (1 speeches)</option>
+      <option value="john-tyler">John Tyler (18 speeches)</option>
+      <option value="james-k-polk">James K. Polk (25 speeches)</option>
+      <option value="zachary-taylor">Zachary Taylor (4 speeches)</option>
+      <option value="millard-fillmore">Millard Fillmore (7 speeches)</option>
+      <option value="abraham-lincoln">Abraham Lincoln (15 speeches)</option>
+      <option value="franklin-pierce">Franklin Pierce (15 speeches)</option>
+      <option value="james-buchanan">James Buchanan (14 speeches)</option>
+      <option value="andrew-johnson">Andrew Johnson (31 speeches)</option>
+      <option value="ulysses-s-grant">Ulysses S. Grant (32 speeches)</option>
+      <option value="rutherford-b-hayes">Rutherford B. Hayes (16 speeches)</option>
+      <option value="chester-a-arthur">Chester A. Arthur (11 speeches)</option>
+      <option value="james-a-garfield">James A. Garfield (1 speeches)</option>
+      <option value="grover-cleveland">Grover Cleveland (32 speeches)</option>
+      <option value="benjamin-harrison">Benjamin Harrison (16 speeches)</option>
+      <option value="william-mckinley">William McKinley (14 speeches)</option>
+      <option value="theodore-roosevelt">Theodore Roosevelt (22 speeches)</option>
+      <option value="william-taft">William Taft (12 speeches)</option>
+      <option value="woodrow-wilson">Woodrow Wilson (33 speeches)</option>
+      <option value="warren-g-harding">Warren G. Harding (18 speeches)</option>
+      <option value="calvin-coolidge">Calvin Coolidge (12 speeches)</option>
+      <option value="herbert-hoover">Herbert Hoover (30 speeches)</option>
+      <option value="franklin-d-roosevelt">Franklin D. Roosevelt (49 speeches)</option>
+      <option value="harry-s-truman">Harry S. Truman (19 speeches)</option>
+      <option value="richard-m-nixon">Richard M. Nixon (23 speeches)</option>
+      <option value="dwight-d-eisenhower">Dwight D. Eisenhower (15 speeches)</option>
+      <option value="john-f-kennedy">John F. Kennedy (44 speeches)</option>
+      <option value="lyndon-b-johnson">Lyndon B. Johnson (71 speeches)</option>
+      <option value="ronald-reagan">Ronald Reagan (60 speeches)</option>
+      <option value="gerald-ford">Gerald Ford (14 speeches)</option>
+      <option value="jimmy-carter">Jimmy Carter (22 speeches)</option>
+      <option value="george-h-w-bush">George H. W. Bush (23 speeches)</option>
+      <option value="bill-clinton">Bill Clinton (39 speeches)</option>
+      <option value="george-w-bush">George W. Bush (38 speeches)</option>
+      <option value="barack-obama">Barack Obama (51 speeches)</option>
+      <option value="donald-trump">Donald Trump (55 speeches)</option>
+      <option value="joe-biden">Joe Biden (28 speeches)</option>
+    </select></span>
+    <span class="seg">
+      <button id="btn-distinctive" class="active" onclick="setView('distinctive')">Distinctive</button>
+      <button id="btn-most-used" class="" onclick="setView('most-used')">Most-used</button>
+      <button id="btn-phrases" class="" onclick="setView('phrases')">Phrases</button>
+    </span>
+  </div>
+  <div class="chart">
+    <img id="cloud" src="presidents/george-washington_distinctive.png?v=1790378600" alt="word cloud"
+         onerror="this.alt='(cloud not generated for this president/view)';">
+  </div>
+  <p class="note">Source: Miller Center (UVA) speech archive. Exploration prototype. build 1790378600</p>
+</div>
+<script>
+  // ?v=BUILD is a cache-buster so the browser always loads the current PNGs
+  // (regenerating the picker changes BUILD, forcing a fresh fetch).
+  var BUILD = '1790378600';
+  var view = 'distinctive';
+  function render() {
+    var s = document.getElementById('pres').value;
+    document.getElementById('cloud').src = 'presidents/' + s + '_' + view + '.png?v=' + BUILD;
+    document.getElementById('cloud').alt = s + ' ' + view + ' words';
+    document.getElementById('btn-distinctive').className = (view==='distinctive')?'active':'';
+    document.getElementById('btn-most-used').className = (view==='most-used')?'active':'';
+    document.getElementById('btn-phrases').className = (view==='phrases')?'active':'';
+  }
+  function swap() { render(); }
+  function setView(v) { view = v; render(); }
+</script>
+</body>
+</html>
