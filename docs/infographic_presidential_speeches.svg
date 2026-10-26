@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  @unwelcomedata — PROJECT INFOGRAPHIC (tall portrait poster)
+  Project: presidential-speeches
+  Bespoke, data-driven poster. Brand FRAME (header/footer/dividers) per
+  shared/infographic-frame-template.svg. Body hand-authored. All data marks
+  computed from data/project.duckdb (chart_sotu_by_decade, chart_top_word_timeline,
+  chart_sotu_topbottom) — see artifacts/INFOGRAPHIC-VALIDATION.md.
+  Canvas width 1200; height 2180.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="2180" viewBox="0 0 1200 2180" font-family="Helvetica, Arial, sans-serif">
+
+  <!-- ===== CANVAS ===== -->
+  <rect width="1200" height="2180" fill="#FBF8F0"/>
+
+  <!-- ============================================================= -->
+  <!-- HEADER BAND                                                   -->
+  <!-- ============================================================= -->
+  <rect x="0" y="0" width="1200" height="300" fill="#003049"/>
+  <text x="80" y="130" fill="#FFFFFF" font-size="76" font-weight="bold">How Presidents Talk</text>
+  <text x="80" y="195" fill="#94D2BD" font-size="40" font-weight="bold">The story isn't more &#8220;I&#8221; &#8212; it's the rise of &#8220;we&#8221;</text>
+  <text x="80" y="245" fill="#E9D8A6" font-size="26">1,059 Miller Center speeches, 45 presidents, 1789&#8211;present. State of the Union series.</text>
+
+  <!-- ============================================================= -->
+  <!-- SECTION 1 — THE RISE OF "WE"  (dual line, SOTU by decade)     -->
+  <!-- ============================================================= -->
+  <text x="80" y="390" fill="#003049" font-size="34" font-weight="bold">The rise of &#8220;we&#8221;</text>
+  <text x="80" y="424" fill="#6B7280" font-size="24">Collective (we/us/our) vs self (I/me/my) words per 1,000, by decade of State of the Union.</text>
+
+  <!-- big-number callout: collective roughly tripled -->
+  <text x="80" y="500" fill="#005F73" font-size="34" font-weight="bold">Collective words more than tripled</text>
+  <text x="80" y="534" fill="#6B7280" font-size="23">&#8220;We&#8221; climbed from ~14 per 1,000 words (1790s) to ~45 (1980s); &#8220;I&#8221; barely moved.</text>
+
+  <!-- plot area: x 160..1120 (960px, decades 1790..2020), y 560..920 (value 0..50 -> 360px) -->
+  <!-- y = 920 - value/50*360 ;  gridlines at 0/25/50 -->
+  <line x1="160" y1="560.0" x2="1120" y2="560.0" stroke="#E5E0D2" stroke-width="2"/>
+  <text x="150" y="566" fill="#9AA0A6" font-size="18" text-anchor="end">50</text>
+  <line x1="160" y1="740.0" x2="1120" y2="740.0" stroke="#E5E0D2" stroke-width="2"/>
+  <text x="150" y="746" fill="#9AA0A6" font-size="18" text-anchor="end">25</text>
+  <line x1="160" y1="920.0" x2="1120" y2="920.0" stroke="#D8D2C0" stroke-width="2"/>
+  <text x="150" y="926" fill="#9AA0A6" font-size="18" text-anchor="end">0</text>
+
+  <!-- COLLECTIVE line (teal) — coll_1k per decade, computed from chart_sotu_by_decade -->
+  <polyline fill="none" stroke="#0A9396" stroke-width="5" stroke-linejoin="round" points="160.0,822.2 201.7,748.6 243.5,829.3 285.2,830.1 327.0,833.0 368.7,846.5 410.4,854.6 452.2,843.7 493.9,877.7 535.7,853.4 577.4,846.1 619.1,845.0 660.9,784.3 702.6,788.7 744.3,805.0 786.1,669.2 827.8,687.4 869.6,634.5 911.3,629.9 953.0,596.5 994.8,598.4 1036.5,621.1 1078.3,592.0 1120.0,670.9"/>
+  <!-- SELF line (caramel) — self_1k per decade -->
+  <polyline fill="none" stroke="#CA6702" stroke-width="5" stroke-linejoin="round" points="160.0,846.7 201.7,883.7 243.5,896.2 285.2,897.8 327.0,862.3 368.7,879.8 410.4,871.0 452.2,876.0 493.9,862.6 535.7,873.6 577.4,882.3 619.1,891.1 660.9,845.2 702.6,878.3 744.3,867.3 786.1,855.1 827.8,862.2 869.6,829.0 911.3,811.7 953.0,845.1 994.8,803.5 1036.5,846.2 1078.3,827.8 1120.0,802.6"/>
+
+  <!-- axis endpoints -->
+  <text x="160" y="946" fill="#6B7280" font-size="18" text-anchor="start">1790s</text>
+  <text x="1120" y="946" fill="#6B7280" font-size="18" text-anchor="end">2020s</text>
+  <!-- line labels -->
+  <text x="978" y="568" fill="#0A9396" font-size="22" font-weight="bold" text-anchor="end">&#8220;we / us / our&#8221; &#8212; rising</text>
+  <text x="1112" y="792" fill="#CA6702" font-size="22" font-weight="bold" text-anchor="end">&#8220;I / me / my&#8221; &#8212; flat</text>
+
+  <!-- takeaway -->
+  <text x="80" y="1002" fill="#003049" font-size="23">Presidents didn't turn the spotlight on themselves &#8212; they increasingly spoke for a collective &#8220;we.&#8221;</text>
+
+  <!-- divider -->
+  <line x1="80" y1="1050" x2="1120" y2="1050" stroke="#E9D8A6" stroke-width="3"/>
+
+  <!-- ============================================================= -->
+  <!-- SECTION 2 — "STATE" -> "PEOPLE"  (the #1-word shift)          -->
+  <!-- ============================================================= -->
+  <text x="80" y="1140" fill="#003049" font-size="34" font-weight="bold">From &#8220;state&#8221; to &#8220;people&#8221;</text>
+  <text x="80" y="1174" fill="#6B7280" font-size="24">The most-used content word in each president's State of the Union, before vs after broadcast.</text>
+
+  <!-- two big word callouts with an arrow between -->
+  <text x="300" y="1310" fill="#005F73" font-size="80" font-weight="bold" text-anchor="middle">&#8220;state&#8221;</text>
+  <text x="300" y="1352" fill="#6B7280" font-size="23" text-anchor="middle">#1 word for nearly every</text>
+  <text x="300" y="1380" fill="#6B7280" font-size="23" text-anchor="middle">president, 1789&#8211;1912</text>
+
+  <text x="600" y="1312" fill="#94D2BD" font-size="70" font-weight="bold" text-anchor="middle">&#8594;</text>
+
+  <text x="900" y="1310" fill="#BB3E03" font-size="80" font-weight="bold" text-anchor="middle">&#8220;people&#8221;</text>
+  <text x="900" y="1352" fill="#6B7280" font-size="23" text-anchor="middle">#1 word for most modern</text>
+  <text x="900" y="1380" fill="#6B7280" font-size="23" text-anchor="middle">presidents since the 1960s</text>
+
+  <!-- supporting roll call -->
+  <text x="80" y="1456" fill="#6B7280" font-size="23">&#8220;State&#8221; led Washington through Taft. &#8220;People&#8221; now tops <tspan fill="#003049" font-weight="bold">LBJ, Reagan, Clinton, Obama, and Trump.</tspan></text>
+  <text x="80" y="1490" fill="#6B7280" font-size="20">Attribution scaffolding (&#8220;Mr. President&#8221;) removed; regular plurals folded (state + states = one word).</text>
+
+  <!-- divider -->
+  <line x1="80" y1="1548" x2="1120" y2="1548" stroke="#E9D8A6" stroke-width="3"/>
+
+  <!-- ============================================================= -->
+  <!-- SECTION 3 — THE MOST "I"-HEAVY ARE THE OLDEST                 -->
+  <!-- ============================================================= -->
+  <text x="80" y="1638" fill="#003049" font-size="34" font-weight="bold">The most &#8220;I&#8221;-heavy presidents are the oldest</text>
+  <text x="80" y="1672" fill="#6B7280" font-size="24">Self share = &#8220;I&#8221; words as a % of self + collective words, State of the Union.</text>
+
+  <!-- proportional bars: track x480 -> x1120 is 640px at max share 1.0 (so px = share*640) -->
+  <!-- William Taft 0.625 -> 400.0 -->
+  <text x="460" y="1738" fill="#003049" font-size="24" font-weight="bold" text-anchor="end">William Taft (1909)</text>
+  <rect x="480" y="1715" width="400.0" height="34" fill="#CA6702"/>
+  <text x="890" y="1740" fill="#003049" font-size="22" font-weight="bold">62%</text>
+
+  <!-- Ulysses S. Grant 0.589 -> 377.0 -->
+  <text x="460" y="1788" fill="#003049" font-size="24" font-weight="bold" text-anchor="end">Ulysses S. Grant (1869)</text>
+  <rect x="480" y="1765" width="377.0" height="34" fill="#CA6702"/>
+  <text x="867" y="1790" fill="#003049" font-size="22" font-weight="bold">59%</text>
+
+  <!-- Chester A. Arthur 0.538 -> 344.3 -->
+  <text x="460" y="1838" fill="#003049" font-size="24" font-weight="bold" text-anchor="end">Chester A. Arthur (1881)</text>
+  <rect x="480" y="1815" width="344.3" height="34" fill="#CA6702"/>
+  <text x="834.3" y="1840" fill="#003049" font-size="22" font-weight="bold">54%</text>
+
+  <!-- George Washington 0.498 -> 318.7 -->
+  <text x="460" y="1888" fill="#003049" font-size="24" font-weight="bold" text-anchor="end">George Washington (1790)</text>
+  <rect x="480" y="1865" width="318.7" height="34" fill="#EE9B00"/>
+  <text x="808.7" y="1890" fill="#003049" font-size="22" font-weight="bold">50%</text>
+
+  <!-- John F. Kennedy 0.161 -> 103.0 (modern contrast) -->
+  <text x="460" y="1938" fill="#6B7280" font-size="24" text-anchor="end">John F. Kennedy (1961)</text>
+  <rect x="480" y="1915" width="103.0" height="34" fill="#94D2BD"/>
+  <text x="593" y="1940" fill="#6B7280" font-size="22" font-weight="bold">16%</text>
+
+  <!-- Jimmy Carter 0.159 -> 101.8 -->
+  <text x="460" y="1988" fill="#6B7280" font-size="24" text-anchor="end">Jimmy Carter (1977)</text>
+  <rect x="480" y="1965" width="101.8" height="34" fill="#94D2BD"/>
+  <text x="591.8" y="1990" fill="#6B7280" font-size="22" font-weight="bold">16%</text>
+
+  <!-- caveat -->
+  <text x="80" y="2036" fill="#6B7280" font-size="20">Early messages were written documents read to Congress &#8212; 19th-century highs partly reflect that written style.</text>
+
+  <!-- ============================================================= -->
+  <!-- FOOTER BAND  (pinned to bottom of canvas height 2180)         -->
+  <!-- ============================================================= -->
+  <rect x="0" y="2090" width="1200" height="90" fill="#003049"/>
+  <text x="80" y="2135" fill="#FFFFFF" font-size="24" font-weight="bold">@unwelcomedata</text>
+  <text x="80" y="2165" fill="#94D2BD" font-size="18">University of Virginia Miller Center speech archive &#183; State of the Union series; written (&#8804;1912) vs spoken (1913+) delivery differs.</text>
+</svg>
