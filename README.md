@@ -15,6 +15,10 @@ the most "we"-leaning are modern (Carter, Kennedy).
 
 ---
 
+[![How presidents talk — infographic](docs/infographic_presidential_speeches.png)](docs/infographic_presidential_speeches.png)
+
+---
+
 ## The charts
 
 Each chart is rendered for the web (click any chart to open it full-size). Figures
