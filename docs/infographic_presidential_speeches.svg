@@ -85,8 +85,8 @@
   <!-- ============================================================= -->
   <!-- SECTION 3 — THE MOST "I"-HEAVY ARE THE OLDEST                 -->
   <!-- ============================================================= -->
-  <text x="80" y="1638" fill="#003049" font-size="34" font-weight="bold">The most &#8220;I&#8221;-heavy presidents are the oldest</text>
-  <text x="80" y="1672" fill="#6B7280" font-size="24">Self share = &#8220;I&#8221; words as a % of self + collective words, State of the Union.</text>
+  <text x="80" y="1638" fill="#003049" font-size="34" font-weight="bold">The highest &#8220;I&#8221; usage in the State of the Union</text>
+  <text x="80" y="1672" fill="#6B7280" font-size="24">Self share = &#8220;I&#8221; words as a % of self + collective words.</text>
 
   <!-- proportional bars: track x480 -> x1120 is 640px at max share 1.0 (so px = share*640) -->
   <!-- William Taft 0.625 -> 400.0 -->

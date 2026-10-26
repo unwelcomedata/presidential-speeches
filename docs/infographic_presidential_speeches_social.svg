@@ -52,8 +52,8 @@
   <line x1="860" y1="450" x2="1540" y2="450" stroke="#E9D8A6" stroke-width="3"/>
 
   <!-- bottom: most "I"-heavy are the oldest (top 3 + 1 modern contrast) -->
-  <text x="860" y="500" fill="#003049" font-size="28" font-weight="bold">The highest &#8220;I&#8221; share is the oldest</text>
-  <text x="860" y="528" fill="#6B7280" font-size="19">Self share (&#8220;I&#8221; of self+collective), SOTU &#8212; written-era style, small samples.</text>
+  <text x="860" y="500" fill="#003049" font-size="28" font-weight="bold">The highest &#8220;I&#8221; usage in the SOTU</text>
+  <text x="860" y="528" fill="#6B7280" font-size="19">Self share (&#8220;I&#8221; of self+collective) &#8212; written-era style, small samples.</text>
 
   <!-- bars: track x1090..1540 = 450px at share max 1.0 -->
   <!-- Taft 0.625 -> 281.3 -->
